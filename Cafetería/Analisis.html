@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hoja de Análisis Metodológico - Ejercicio 9 (UCLA DCyT)</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 12mm;
+    }
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      margin: 0;
+      padding: 16px;
+      font-size: 11px;
+      line-height: 1.32;
+    }
+    .page-container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 22px 26px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .header-table {
+      width: 100%;
+      border-bottom: 2px solid #1e3a8a;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+    .title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #1e3a8a;
+      text-transform: uppercase;
+      margin: 0;
+    }
+    .subtitle {
+      font-size: 10px;
+      color: #475569;
+      margin: 2px 0 0 0;
+    }
+    h2 {
+      font-size: 11.5px;
+      background-color: #1e3a8a;
+      color: #ffffff;
+      padding: 4px 8px;
+      margin: 9px 0 6px 0;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 8px;
+    }
+    table.data-table th, table.data-table td {
+      border: 1px solid #cbd5e1;
+      padding: 4px 6px;
+      text-align: left;
+      font-size: 10px;
+    }
+    table.data-table th {
+      background-color: #f1f5f9;
+      color: #1e293b;
+      font-weight: 600;
+    }
+    .highlight {
+      background-color: #eff6ff;
+      font-weight: 600;
+    }
+    .badge {
+      display: inline-block;
+      padding: 1px 5px;
+      font-size: 9px;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+    .badge-base { background: #e0e7ff; color: #3730a3; }
+    .badge-sub { background: #dcfce7; color: #166534; }
+    .badge-mayor { background: #fef3c7; color: #92400e; }
+    .code-pill {
+      font-family: Consolas, monospace;
+      background: #f1f5f9;
+      padding: 1px 4px;
+      border-radius: 3px;
+      color: #0f172a;
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+    .col-50 {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <table class="header-table">
+      <tr>
+        <td>
+          <div class="title">Universidad Centroccidental "Lisandro Alvarado"</div>
+          <div class="subtitle">Decanato de Ciencias y Tecnología • Coordinación del Eje Curricular de Programación</div>
+          <div class="subtitle"><strong>Programación I (3154) / Programación (C4) — Corte II: Herencia en POO con MVC</strong></div>
+        </td>
+        <td style="text-align: right; vertical-align: top;">
+          <span style="font-size: 12px; font-weight: bold; color: #1e3a8a;">ANÁLISIS METODOLÓGICO</span><br />
+          <span style="font-size: 10px; color: #64748b;">Ejercicio 9: Cafetería de Especialidad</span>
+        </td>
+      </tr>
+    </table>
+
+    <h2>1. Planteamiento del Problema &amp; Requerimientos</h2>
+    <p style="margin: 0 0 6px 0;">
+      En el módulo de ventas de una cafetería (<code class="code-pill">MCafeteria</code>) se registran las bebidas preparadas (<code class="code-pill">MBebida</code>), conociendo su <code class="code-pill">nombre</code> y <code class="code-pill">precioBase</code>. Existen dos preparaciones especializadas:
+      <strong>Café Caliente</strong> (<code class="code-pill">MCafeCaliente</code>: suma $0.75 al precio base si se solicita <code class="code-pill">conLecheVegetal</code>) y
+      <strong>Bebida Fría / Frappé</strong> (<code class="code-pill">MBebidaFria</code>: incrementa el precio base en un 20% si <code class="code-pill">esGrande</code>).
+      Se desea calcular el precio final de cada bebida, el monto total de ventas y cuántas bebidas superaron los $4.
+      <strong>Nuevo Requerimiento:</strong> Implementar el método polimórfico <code class="code-pill">gramosAzucar()</code>: <code class="code-pill">MBebida</code> aporta 10 g base; <code class="code-pill">MCafeCaliente</code> reduce a la mitad si lleva leche vegetal; <code class="code-pill">MBebidaFria</code> suma 12 g adicionales y si es grande incrementa el subtotal en 20%; <code class="code-pill">MCafeteria</code> reporta los gramos de cada bebida y su promedio (<code class="code-pill">promedioGramosAzucar()</code>).
+    </p>
+
+    <h2>2. Arquitectura de Clases y Jerarquía de Herencia (Sin Arreglos)</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Clase</th>
+          <th>Rol en MVC</th>
+          <th>Relación POO</th>
+          <th>Responsabilidad Principal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code class="code-pill">MBebida</code></td>
+          <td><span class="badge badge-base">Clase Menor Base</span></td>
+          <td>Superclase</td>
+          <td>Generaliza <code class="code-pill">_nombre</code> y <code class="code-pill">_precioBase</code> protegidos, expone getters/setters y define <code class="code-pill">calcularPrecioFinal()</code> y <code class="code-pill">gramosAzucar()</code> (10 g).</td>
+        </tr>
+        <tr>
+          <td><code class="code-pill">MCafeCaliente</code></td>
+          <td><span class="badge badge-sub">Clase Menor Hija</span></td>
+          <td>Especialización (<code class="code-pill">extends MBebida</code>)</td>
+          <td>Añade <code class="code-pill">_conLecheVegetal</code>; sobreescribe <code class="code-pill">calcularPrecioFinal()</code> (+ $0.75) y <code class="code-pill">gramosAzucar()</code> (mitad si leche vegetal).</td>
+        </tr>
+        <tr>
+          <td><code class="code-pill">MBebidaFria</code></td>
+          <td><span class="badge badge-sub">Clase Menor Hija</span></td>
+          <td>Especialización (<code class="code-pill">extends MBebida</code>)</td>
+          <td>Añade <code class="code-pill">_esGrande</code>; sobreescribe <code class="code-pill">calcularPrecioFinal()</code> (+20% si grande) y <code class="code-pill">gramosAzucar()</code> (+12 g, +20% si grande).</td>
+        </tr>
+        <tr>
+          <td><code class="code-pill">MCafeteria</code></td>
+          <td><span class="badge badge-mayor">Clase Mayor</span></td>
+          <td>Acumulador / Polimorfismo</td>
+          <td>Procesa cada bebida (<code class="code-pill">procesarBebida(bebida: MBebida)</code>), acumula ventas y azúcar, cuenta precios &gt; $4 y calcula <code class="code-pill">promedioGramosAzucar()</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>3. Diccionario de Datos y Métodos (Con Piso vs. Sin Piso)</h2>
+    <div class="row">
+      <div class="col-50">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Identificador</th>
+              <th>Tipo</th>
+              <th>Visib.</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code class="code-pill">MBebida._nombre</code></td>
+              <td>string</td>
+              <td># protected</td>
+              <td>Nombre de la bebida preparada.</td>
+            </tr>
+            <tr>
+              <td><code class="code-pill">MBebida._precioBase</code></td>
+              <td>number</td>
+              <td># protected</td>
+              <td>Precio base de la bebida.</td>
+            </tr>
+            <tr>
+              <td><code class="code-pill">MCafeCaliente._conLecheVegetal</code></td>
+              <td>boolean</td>
+              <td>- private</td>
+              <td>Indica si se solicita con leche vegetal.</td>
+            </tr>
+            <tr>
+              <td><code class="code-pill">MBebidaFria._esGrande</code></td>
+              <td>boolean</td>
+              <td>- private</td>
+              <td>Indica si la bebida es tamaño grande.</td>
+            </tr>
+            <tr>
+              <td><code class="code-pill">MCafeteria.acMontoTotal</code></td>
+              <td>number</td>
+              <td>- private</td>
+              <td>Acumulador de ventas totales (sin piso).</td>
+            </tr>
+            <tr>
+              <td><code class="code-pill">MCafeteria.acGramosAzucar</code></td>
+              <td>number</td>
+              <td>- private</td>
+              <td>Acumulador de gramos de azúcar (sin piso).</td>
+            </tr>
+            <tr>
+              <td><code class="code-pill">MCafeteria.cntBebidasMayorCuatro</code></td>
+              <td>number</td>
+              <td>- private</td>
+              <td>Contador de bebidas con precio &gt; $4 (sin piso).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="col-50">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Método / Constante</th>
+              <th>Clase</th>
+              <th>Fórmula / Lógica</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code class="code-pill">calcularPrecioFinal(): number</code></td>
+              <td>MBebida</td>
+              <td><code class="code-pill">return this.precioBase;</code></td>
+            </tr>
+            <tr>
+              <td><code class="code-pill">gramosAzucar(): number</code></td>
+              <td>MBebida</td>
+              <td><code class="code-pill">GRAMOS_AZUCAR_BASE</code> (10)</td>
+            </tr>
+            <tr>
+              <td><code class="code-pill">override calcularPrecioFinal()</code></td>
+              <td>MCafeCaliente</td>
+              <td><code class="code-pill">super.calcularPrecioFinal() + (conLecheVegetal ? 0.75 : 0)</code></td>
+            </tr>
+            <tr>
+              <td><code class="code-pill">override gramosAzucar()</code></td>
+              <td>MCafeCaliente</td>
+              <td><code class="code-pill">super.gramosAzucar() * (conLecheVegetal ? 0.5 : 1)</code></td>
+            </tr>
+            <tr>
+              <td><code class="code-pill">override calcularPrecioFinal()</code></td>
+              <td>MBebidaFria</td>
+              <td><code class="code-pill">super.calcularPrecioFinal() * (esGrande ? 1.20 : 1)</code></td>
+            </tr>
+            <tr>
+              <td><code class="code-pill">override gramosAzucar()</code></td>
+              <td>MBebidaFria</td>
+              <td><code class="code-pill">(super.gramosAzucar() + 12) * (esGrande ? 1.20 : 1)</code></td>
+            </tr>
+            <tr>
+              <td><code class="code-pill">promedioGramosAzucar(): number</code></td>
+              <td>MCafeteria</td>
+              <td><code class="code-pill">cntBebidas === 0 ? 0 : acGramosAzucar / cntBebidas</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h2>4. Validación de Casos de Prueba Oficiales</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Bebida</th>
+          <th>Tipo</th>
+          <th>Precio Base</th>
+          <th>Opción Especial</th>
+          <th>Precio Final</th>
+          <th>¿Mayor a $4?</th>
+          <th>Azúcar (g)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Latte</strong></td>
+          <td>Caliente</td>
+          <td>$3.00</td>
+          <td>Leche vegetal: Sí</td>
+          <td class="highlight">$3.75</td>
+          <td>No</td>
+          <td class="highlight">5.00 g (10 * 0.5)</td>
+        </tr>
+        <tr>
+          <td><strong>Frappé Mocha</strong></td>
+          <td>Fría</td>
+          <td>$4.00</td>
+          <td>Grande: Sí</td>
+          <td class="highlight">$4.80</td>
+          <td>Sí (1)</td>
+          <td class="highlight">26.40 g ((10+12) * 1.2)</td>
+        </tr>
+        <tr>
+          <td><strong>Americano</strong></td>
+          <td>Caliente</td>
+          <td>$2.50</td>
+          <td>Leche vegetal: No</td>
+          <td class="highlight">$2.50</td>
+          <td>No</td>
+          <td class="highlight">10.00 g</td>
+        </tr>
+        <tr>
+          <td><strong>Matcha Helado</strong></td>
+          <td>Fría</td>
+          <td>$4.50</td>
+          <td>Grande: No</td>
+          <td class="highlight">$4.50</td>
+          <td>Sí (2)</td>
+          <td class="highlight">22.00 g (10+12)</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr style="background-color: #f8fafc; font-weight: bold;">
+          <td colspan="4" style="text-align: right;">MONTO TOTAL DE VENTAS:</td>
+          <td colspan="3" class="highlight">$3.75 + $4.80 + $2.50 + $4.50 = <strong>$15.55</strong></td>
+        </tr>
+        <tr style="background-color: #f8fafc; font-weight: bold;">
+          <td colspan="4" style="text-align: right;">BEBIDAS CON PRECIO MAYOR A $4:</td>
+          <td colspan="3" class="highlight"><strong>2</strong> (Frappé Mocha y Matcha Helado)</td>
+        </tr>
+        <tr style="background-color: #f8fafc; font-weight: bold;">
+          <td colspan="4" style="text-align: right;">PROMEDIO DE AZÚCAR POR BEBIDA:</td>
+          <td colspan="3" class="highlight">(5.00 + 26.40 + 10.00 + 22.00) / 4 = <strong>15.85 g</strong></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div style="text-align: center; font-size: 9.5px; color: #64748b; margin-top: 8px; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
+      Eje Curricular de Programación • UCLA DCyT • Proyecto MVC en TypeScript con Herencia (Cero Any y Cero Arreglos)
+    </div>
+  </div>
+</body>
+</html>

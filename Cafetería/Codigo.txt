@@ -1,0 +1,706 @@
+==================================================
+PLANTEAMIENTO DEL EJERCICIO
+9. CAFETERÍA DE ESPECIALIDAD
+
+En el módulo de ventas de una cafetería (clase mayor: MCafeteria) se registran las bebidas preparadas (clase menor base: MBebida), conociendo su nombre y precio base. Existen dos preparaciones especializadas: Café Caliente (MCafeCaliente, que suma $0.75 al precio base si se solicita con leche vegetal) y Bebida Fría / Frappé (MBebidaFria, que incrementa el precio base en un 20% si es tamaño grande).
+
+Se desea calcular el precio final de cada bebida, el monto total de ventas y cuántas bebidas superaron los $4 de precio final.
+
+Nuevo Requerimiento:
+Se solicita implementar el método polimórfico gramosAzucar() (contenido estimado en gramos) en la jerarquía de bebidas:
+- Clase base (MBebida): aporta 10 gramos base de endulzante o jarabe estándar.
+- Café Caliente (MCafeCaliente): reduce a la mitad los gramos base si se prepara con leche vegetal; de lo contrario mantiene los gramos base.
+- Bebida Fría / Frappé (MBebidaFria): suma 12 gramos adicionales a los gramos base por la mezcla fría; además, si es tamaño grande, incrementa ese subtotal en un 20%.
+Actualización en MCafeteria: Reportar los gramos de azúcar de cada bebida y el promedio de gramos de azúcar por bebida vendida.
+
+Datos de entrada:
+- Bebida: Latte, Precio base: 3, Tipo: Caliente, Leche vegetal: Sí
+- Bebida: Frappé Mocha, Precio base: 4, Tipo: Fría, Grande: Sí
+- Bebida: Americano, Precio base: 2.50, Tipo: Caliente, Leche vegetal: No
+- Bebida: Matcha Helado, Precio base: 4.50, Tipo: Fría, Grande: No
+
+La salida requerida presenta el siguiente formato:
+Latte: $3.75
+Frappé Mocha: $4.80
+Americano: $2.50
+Matcha Helado: $4.50
+
+Monto total de ventas: $15.55
+Bebidas con precio mayor a $4: 2
+
+Salida esperada del nuevo requerimiento:
+Latte -> Azúcar: 5.00 g
+Frappé Mocha -> Azúcar: 26.40 g
+Americano -> Azúcar: 10.00 g
+Matcha Helado -> Azúcar: 22.00 g
+
+Promedio de azúcar por bebida: 15.85 g
+
+--------------------------------------------------
+ARCHIVO: src/interfaces/ICafeteriaView.ts
+export interface ICafeteriaView {
+  get nombre(): string;
+  get precioBase(): number;
+  get tipo(): string;
+  get conLecheVegetal(): boolean;
+  get esGrande(): boolean;
+
+  onProcesar(callback: () => void): void;
+  onCargarCasosPrueba(callback: () => void): void;
+  onLimpiar(callback: () => void): void;
+  onCambioTipo(callback: (tipo: string) => void): void;
+
+  reportarBebida(nombre: string, tipo: string, precioBase: number, precioFinal: number, gramosAzucar: number): void;
+  reportarResumen(montoTotal: number, cantidadMayorCuatro: number, promedioAzucar: number, totalBebidas: number): void;
+  mostrarMensaje(mensaje: string, tipo: "success" | "danger" | "info" | "warning"): void;
+  actualizarCamposEspecificos(tipo: string): void;
+  limpiarFormulario(): void;
+  reiniciarVista(): void;
+}
+
+--------------------------------------------------
+ARCHIVO: src/models/MBebida.ts
+export class MBebida {
+  private static readonly GRAMOS_AZUCAR_BASE: number = 10;
+  protected _nombre: string = "";
+  protected _precioBase: number = 0;
+
+  constructor(nombre: string, precioBase: number) {
+    this.nombre = nombre;
+    this.precioBase = precioBase;
+  }
+
+  set nombre(valor: string) {
+    this._nombre = valor.trim();
+  }
+
+  get nombre(): string {
+    return this._nombre;
+  }
+
+  set precioBase(valor: number) {
+    this._precioBase = +valor;
+  }
+
+  get precioBase(): number {
+    return this._precioBase;
+  }
+
+  calcularPrecioFinal(): number {
+    return this.precioBase;
+  }
+
+  gramosAzucar(): number {
+    return MBebida.GRAMOS_AZUCAR_BASE;
+  }
+
+  obtenerTipo(): string {
+    return "Bebida";
+  }
+}
+
+--------------------------------------------------
+ARCHIVO: src/models/MCafeCaliente.ts
+import { MBebida } from "./MBebida.js";
+
+export class MCafeCaliente extends MBebida {
+  private static readonly RECARGO_LECHE_VEGETAL: number = 0.75;
+  private static readonly FACTOR_AZUCAR_LECHE_VEGETAL: number = 0.5;
+  private _conLecheVegetal: boolean = false;
+
+  constructor(nombre: string, precioBase: number, conLecheVegetal: boolean) {
+    super(nombre, precioBase);
+    this.conLecheVegetal = conLecheVegetal;
+  }
+
+  set conLecheVegetal(valor: boolean) {
+    this._conLecheVegetal = Boolean(valor);
+  }
+
+  get conLecheVegetal(): boolean {
+    return this._conLecheVegetal;
+  }
+
+  override calcularPrecioFinal(): number {
+    let precio = super.calcularPrecioFinal();
+    if (this.conLecheVegetal) {
+      precio += MCafeCaliente.RECARGO_LECHE_VEGETAL;
+    }
+    return precio;
+  }
+
+  override gramosAzucar(): number {
+    const gramosBase = super.gramosAzucar();
+    if (this.conLecheVegetal) {
+      return gramosBase * MCafeCaliente.FACTOR_AZUCAR_LECHE_VEGETAL;
+    }
+    return gramosBase;
+  }
+
+  override obtenerTipo(): string {
+    return "Café Caliente";
+  }
+}
+
+--------------------------------------------------
+ARCHIVO: src/models/MBebidaFria.ts
+import { MBebida } from "./MBebida.js";
+
+export class MBebidaFria extends MBebida {
+  private static readonly INCREMENTO_TAMANO_GRANDE: number = 0.20;
+  private static readonly AZUCAR_MEZCLA_FRIA: number = 12;
+  private _esGrande: boolean = false;
+
+  constructor(nombre: string, precioBase: number, esGrande: boolean) {
+    super(nombre, precioBase);
+    this.esGrande = esGrande;
+  }
+
+  set esGrande(valor: boolean) {
+    this._esGrande = Boolean(valor);
+  }
+
+  get esGrande(): boolean {
+    return this._esGrande;
+  }
+
+  override calcularPrecioFinal(): number {
+    let precio = super.calcularPrecioFinal();
+    if (this.esGrande) {
+      precio += precio * MBebidaFria.INCREMENTO_TAMANO_GRANDE;
+    }
+    return precio;
+  }
+
+  override gramosAzucar(): number {
+    let subtotal = super.gramosAzucar() + MBebidaFria.AZUCAR_MEZCLA_FRIA;
+    if (this.esGrande) {
+      subtotal += subtotal * MBebidaFria.INCREMENTO_TAMANO_GRANDE;
+    }
+    return subtotal;
+  }
+
+  override obtenerTipo(): string {
+    return "Bebida Fría";
+  }
+}
+
+--------------------------------------------------
+ARCHIVO: src/models/MCafeteria.ts
+import { MBebida } from "./MBebida.js";
+
+export class MCafeteria {
+  private static readonly PRECIO_LIMITE: number = 4;
+  private acMontoTotal: number = 0;
+  private acGramosAzucar: number = 0;
+  private cntBebidasMayorCuatro: number = 0;
+  private cntBebidas: number = 0;
+
+  procesarBebida(bebida: MBebida): void {
+    const precioFinal = bebida.calcularPrecioFinal();
+    this.acMontoTotal += precioFinal;
+    this.acGramosAzucar += bebida.gramosAzucar();
+    this.cntBebidas++;
+
+    if (precioFinal > MCafeteria.PRECIO_LIMITE) {
+      this.cntBebidasMayorCuatro++;
+    }
+  }
+
+  montoTotalVentas(): number {
+    return this.acMontoTotal;
+  }
+
+  cantidadBebidasMayorCuatro(): number {
+    return this.cntBebidasMayorCuatro;
+  }
+
+  promedioGramosAzucar(): number {
+    if (this.cntBebidas === 0) {
+      return 0;
+    }
+    return this.acGramosAzucar / this.cntBebidas;
+  }
+
+  cantidadBebidas(): number {
+    return this.cntBebidas;
+  }
+
+  reiniciar(): void {
+    this.acMontoTotal = 0;
+    this.acGramosAzucar = 0;
+    this.cntBebidasMayorCuatro = 0;
+    this.cntBebidas = 0;
+  }
+}
+
+--------------------------------------------------
+ARCHIVO: src/views/vCafeteria.ts
+import { ICafeteriaView } from "../interfaces/ICafeteriaView.js";
+
+export class vCafeteria implements ICafeteriaView {
+  private inNombre: HTMLInputElement;
+  private inPrecioBase: HTMLInputElement;
+  private selTipo: HTMLSelectElement;
+
+  private secCaliente: HTMLElement;
+  private chkLecheVegetal: HTMLInputElement;
+
+  private secFria: HTMLElement;
+  private chkGrande: HTMLInputElement;
+
+  private btnProcesar: HTMLButtonElement;
+  private btnCargarCasos: HTMLButtonElement;
+  private btnLimpiar: HTMLButtonElement;
+
+  private tblReporteCuerpo: HTMLElement;
+  private txtConsolaSalida: HTMLElement;
+  private txtSalidaAzucar: HTMLElement;
+  private lblMontoTotal: HTMLElement;
+  private lblBebidasMayorCuatro: HTMLElement;
+  private lblPromedioAzucar: HTMLElement;
+  private lblTotalBebidas: HTMLElement;
+  private divMensaje: HTMLElement;
+  private salidaBebidas: string = "";
+  private salidaAzucar: string = "";
+
+  constructor() {
+    this.inNombre = document.getElementById("inNombre") as HTMLInputElement;
+    this.inPrecioBase = document.getElementById("inPrecioBase") as HTMLInputElement;
+    this.selTipo = document.getElementById("selTipo") as HTMLSelectElement;
+
+    this.secCaliente = document.getElementById("secCaliente") as HTMLElement;
+    this.chkLecheVegetal = document.getElementById("chkLecheVegetal") as HTMLInputElement;
+
+    this.secFria = document.getElementById("secFria") as HTMLElement;
+    this.chkGrande = document.getElementById("chkGrande") as HTMLInputElement;
+
+    this.btnProcesar = document.getElementById("btnProcesar") as HTMLButtonElement;
+    this.btnCargarCasos = document.getElementById("btnCargarCasos") as HTMLButtonElement;
+    this.btnLimpiar = document.getElementById("btnLimpiar") as HTMLButtonElement;
+
+    this.tblReporteCuerpo = document.getElementById("tblReporteCuerpo") as HTMLElement;
+    this.txtConsolaSalida = document.getElementById("txtConsolaSalida") as HTMLElement;
+    this.txtSalidaAzucar = document.getElementById("txtSalidaAzucar") as HTMLElement;
+    this.lblMontoTotal = document.getElementById("lblMontoTotal") as HTMLElement;
+    this.lblBebidasMayorCuatro = document.getElementById("lblBebidasMayorCuatro") as HTMLElement;
+    this.lblPromedioAzucar = document.getElementById("lblPromedioAzucar") as HTMLElement;
+    this.lblTotalBebidas = document.getElementById("lblTotalBebidas") as HTMLElement;
+    this.divMensaje = document.getElementById("divMensaje") as HTMLElement;
+
+    this.actualizarCamposEspecificos(this.tipo);
+    this.selTipo.addEventListener("change", () => {
+      this.actualizarCamposEspecificos(this.tipo);
+    });
+  }
+
+  get nombre(): string {
+    return this.inNombre.value.trim();
+  }
+
+  get precioBase(): number {
+    return +this.inPrecioBase.value;
+  }
+
+  get tipo(): string {
+    return this.selTipo.value.toLowerCase();
+  }
+
+  get conLecheVegetal(): boolean {
+    return this.chkLecheVegetal.checked;
+  }
+
+  get esGrande(): boolean {
+    return this.chkGrande.checked;
+  }
+
+  onProcesar(callback: () => void): void {
+    this.btnProcesar.onclick = callback;
+  }
+
+  onCargarCasosPrueba(callback: () => void): void {
+    this.btnCargarCasos.onclick = callback;
+  }
+
+  onLimpiar(callback: () => void): void {
+    this.btnLimpiar.onclick = callback;
+  }
+
+  onCambioTipo(callback: (tipo: string) => void): void {
+    this.selTipo.onchange = () => {
+      this.actualizarCamposEspecificos(this.tipo);
+      callback(this.tipo);
+    };
+  }
+
+  actualizarCamposEspecificos(tipo: string): void {
+    if (tipo === "caliente") {
+      this.secCaliente.style.display = "block";
+      this.secFria.style.display = "none";
+    } else {
+      this.secCaliente.style.display = "none";
+      this.secFria.style.display = "block";
+    }
+  }
+
+  reportarBebida(
+    nombre: string,
+    tipo: string,
+    precioBase: number,
+    precioFinal: number,
+    gramosAzucar: number
+  ): void {
+    const lineaPrecio = `${nombre}: $${precioFinal.toFixed(2)}`;
+    const lineaAzucar = `${nombre} -> Azúcar: ${gramosAzucar.toFixed(2)} g`;
+    console.log(lineaPrecio);
+    console.log(lineaAzucar);
+
+    this.salidaBebidas += `${lineaPrecio}\n`;
+    this.salidaAzucar += `${lineaAzucar}\n`;
+
+    if (this.txtConsolaSalida) {
+      this.txtConsolaSalida.textContent = this.salidaBebidas;
+    }
+
+    if (this.txtSalidaAzucar) {
+      this.txtSalidaAzucar.textContent = this.salidaAzucar;
+    }
+
+    if (this.tblReporteCuerpo) {
+      const fila = document.createElement("tr");
+
+      const tdNombre = document.createElement("td");
+      tdNombre.textContent = nombre;
+
+      const tdTipo = document.createElement("td");
+      tdTipo.textContent = tipo;
+
+      const tdBase = document.createElement("td");
+      tdBase.textContent = `$${precioBase.toFixed(2)}`;
+
+      const tdFinal = document.createElement("td");
+      tdFinal.textContent = `$${precioFinal.toFixed(2)}`;
+
+      const tdAzucar = document.createElement("td");
+      tdAzucar.textContent = `${gramosAzucar.toFixed(2)} g`;
+
+      fila.appendChild(tdNombre);
+      fila.appendChild(tdTipo);
+      fila.appendChild(tdBase);
+      fila.appendChild(tdFinal);
+      fila.appendChild(tdAzucar);
+      this.tblReporteCuerpo.appendChild(fila);
+    }
+  }
+
+  reportarResumen(
+    montoTotal: number,
+    cantidadMayorCuatro: number,
+    promedioAzucar: number,
+    totalBebidas: number
+  ): void {
+    const lineaTotal = `Monto total de ventas: $${montoTotal.toFixed(2)}`;
+    const lineaMayores = `Bebidas con precio mayor a $4: ${cantidadMayorCuatro}`;
+    const lineaAzucar = `Promedio de azúcar por bebida: ${promedioAzucar.toFixed(2)} g`;
+
+    console.log("");
+    console.log(lineaTotal);
+    console.log(lineaMayores);
+    console.log(lineaAzucar);
+
+    if (this.txtConsolaSalida) {
+      this.txtConsolaSalida.textContent = `${this.salidaBebidas}\n${lineaTotal}\n${lineaMayores}`;
+    }
+
+    if (this.txtSalidaAzucar) {
+      this.txtSalidaAzucar.textContent = `${this.salidaAzucar}\n${lineaAzucar}`;
+    }
+
+    if (this.lblMontoTotal) {
+      this.lblMontoTotal.textContent = `$${montoTotal.toFixed(2)}`;
+    }
+    if (this.lblBebidasMayorCuatro) {
+      this.lblBebidasMayorCuatro.textContent = `${cantidadMayorCuatro}`;
+    }
+    if (this.lblPromedioAzucar) {
+      this.lblPromedioAzucar.textContent = `${promedioAzucar.toFixed(2)} g`;
+    }
+    if (this.lblTotalBebidas) {
+      this.lblTotalBebidas.textContent = `${totalBebidas}`;
+    }
+  }
+
+  mostrarMensaje(mensaje: string, tipo: "success" | "danger" | "info" | "warning"): void {
+    if (this.divMensaje) {
+      this.divMensaje.textContent = mensaje;
+      this.divMensaje.style.color = tipo === "danger" ? "#b91c1c" : tipo === "warning" ? "#b45309" : "#15803d";
+      this.divMensaje.style.display = "block";
+      setTimeout(() => {
+        if (this.divMensaje) this.divMensaje.style.display = "none";
+      }, 3000);
+    }
+  }
+
+  limpiarFormulario(): void {
+    this.inNombre.value = "";
+    this.inPrecioBase.value = "";
+    this.chkLecheVegetal.checked = false;
+    this.chkGrande.checked = false;
+    this.inNombre.focus();
+  }
+
+  reiniciarVista(): void {
+    this.limpiarFormulario();
+    this.salidaBebidas = "";
+    this.salidaAzucar = "";
+    if (this.tblReporteCuerpo) this.tblReporteCuerpo.innerHTML = "";
+    if (this.txtConsolaSalida) this.txtConsolaSalida.textContent = "";
+    if (this.txtSalidaAzucar) this.txtSalidaAzucar.textContent = "";
+    if (this.lblMontoTotal) this.lblMontoTotal.textContent = "$0.00";
+    if (this.lblBebidasMayorCuatro) this.lblBebidasMayorCuatro.textContent = "0";
+    if (this.lblPromedioAzucar) this.lblPromedioAzucar.textContent = "0.00 g";
+    if (this.lblTotalBebidas) this.lblTotalBebidas.textContent = "0";
+    if (this.divMensaje) this.divMensaje.style.display = "none";
+    console.clear();
+  }
+}
+
+--------------------------------------------------
+ARCHIVO: src/controllers/cCafeteria.ts
+import { MCafeteria } from "../models/MCafeteria.js";
+import { MBebida } from "../models/MBebida.js";
+import { MCafeCaliente } from "../models/MCafeCaliente.js";
+import { MBebidaFria } from "../models/MBebidaFria.js";
+import { ICafeteriaView } from "../interfaces/ICafeteriaView.js";
+
+export class cCafeteria {
+  private modelo: MCafeteria;
+  private vista: ICafeteriaView;
+
+  constructor(modeloIny: MCafeteria, vistaIny: ICafeteriaView) {
+    this.modelo = modeloIny;
+    this.vista = vistaIny;
+  }
+
+  iniciar(): void {
+    this.vista.onProcesar(() => this.procesarBebida());
+    this.vista.onCargarCasosPrueba(() => this.cargarCasosPrueba());
+    this.vista.onLimpiar(() => this.reiniciar());
+    this.cargarCasosPrueba();
+  }
+
+  private registrarBebida(bebida: MBebida): void {
+    this.modelo.procesarBebida(bebida);
+    this.vista.reportarBebida(
+      bebida.nombre,
+      bebida.obtenerTipo(),
+      bebida.precioBase,
+      bebida.calcularPrecioFinal(),
+      bebida.gramosAzucar()
+    );
+  }
+
+  private actualizarResumen(): void {
+    this.vista.reportarResumen(
+      this.modelo.montoTotalVentas(),
+      this.modelo.cantidadBebidasMayorCuatro(),
+      this.modelo.promedioGramosAzucar(),
+      this.modelo.cantidadBebidas()
+    );
+  }
+
+  private procesarBebida(): void {
+    const nombre = this.vista.nombre;
+    const precioBase = this.vista.precioBase;
+    const tipo = this.vista.tipo;
+
+    if (!nombre) {
+      this.vista.mostrarMensaje("Por favor, ingrese el nombre de la bebida.", "warning");
+      return;
+    }
+
+    if (isNaN(precioBase) || precioBase <= 0) {
+      this.vista.mostrarMensaje("El precio base debe ser un número positivo mayor a 0.", "danger");
+      return;
+    }
+
+    let bebida: MBebida;
+
+    if (tipo === "caliente") {
+      bebida = new MCafeCaliente(nombre, precioBase, this.vista.conLecheVegetal);
+    } else {
+      bebida = new MBebidaFria(nombre, precioBase, this.vista.esGrande);
+    }
+
+    this.registrarBebida(bebida);
+    this.actualizarResumen();
+    this.vista.limpiarFormulario();
+    this.vista.mostrarMensaje(`Bebida ${bebida.nombre} registrada correctamente.`, "success");
+  }
+
+  private cargarCasosPrueba(): void {
+    this.modelo.reiniciar();
+    this.vista.reiniciarVista();
+
+    const bebida1 = new MCafeCaliente("Latte", 3, true);
+    const bebida2 = new MBebidaFria("Frappé Mocha", 4, true);
+    const bebida3 = new MCafeCaliente("Americano", 2.50, false);
+    const bebida4 = new MBebidaFria("Matcha Helado", 4.50, false);
+
+    this.registrarBebida(bebida1);
+    this.registrarBebida(bebida2);
+    this.registrarBebida(bebida3);
+    this.registrarBebida(bebida4);
+
+    this.actualizarResumen();
+    this.vista.mostrarMensaje("Casos de prueba cargados correctamente.", "info");
+  }
+
+  private reiniciar(): void {
+    this.modelo.reiniciar();
+    this.vista.reiniciarVista();
+    this.vista.mostrarMensaje("Ventas reiniciadas correctamente.", "info");
+  }
+}
+
+--------------------------------------------------
+ARCHIVO: src/index.ts
+import { MCafeteria } from "./models/MCafeteria.js";
+import { vCafeteria } from "./views/vCafeteria.js";
+import { cCafeteria } from "./controllers/cCafeteria.js";
+
+const modelo = new MCafeteria();
+const vista = new vCafeteria();
+const controlador = new cCafeteria(modelo, vista);
+
+controlador.iniciar();
+
+--------------------------------------------------
+ARCHIVO: index.html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cafetería de Especialidad</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    input, select, button {
+      padding: 5px;
+      margin: 3px 0;
+    }
+    .caja {
+      border: 1px solid #999;
+      padding: 15px;
+      margin-bottom: 20px;
+      max-width: 520px;
+    }
+    .subseccion {
+      margin-top: 10px;
+      border-top: 1px dashed #ccc;
+      padding-top: 8px;
+    }
+    table {
+      border-collapse: collapse;
+      margin-top: 10px;
+      width: 100%;
+      max-width: 520px;
+    }
+    th, td {
+      border: 1px solid #999;
+      padding: 5px 8px;
+      text-align: left;
+    }
+    pre {
+      background-color: #f4f4f4;
+      border: 1px solid #ccc;
+      padding: 10px;
+      max-width: 520px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Cafetería de Especialidad</h2>
+
+  <section class="caja">
+    <h3>Registrar Bebida</h3>
+
+    <div>
+      <label>Nombre:<br>
+        <input type="text" id="inNombre" placeholder="Ej: Latte, Frappé Mocha">
+      </label>
+    </div>
+
+    <div>
+      <label>Precio base ($):<br>
+        <input type="number" id="inPrecioBase" step="0.01" placeholder="0.00">
+      </label>
+    </div>
+
+    <div>
+      <label>Tipo de preparación:<br>
+        <select id="selTipo">
+          <option value="caliente">Café Caliente</option>
+          <option value="fria">Bebida Fría / Frappé</option>
+        </select>
+      </label>
+    </div>
+
+    <div id="secCaliente" class="subseccion">
+      <label>
+        <input type="checkbox" id="chkLecheVegetal"> Con leche vegetal (+$0.75)
+      </label>
+    </div>
+
+    <div id="secFria" class="subseccion" style="display: none;">
+      <label>
+        <input type="checkbox" id="chkGrande"> Tamaño grande (+20%)
+      </label>
+    </div>
+
+    <br>
+    <div>
+      <button type="button" id="btnProcesar">Procesar</button>
+      <button type="button" id="btnCargarCasos">Cargar Casos de Prueba</button>
+      <button type="button" id="btnLimpiar">Reiniciar</button>
+    </div>
+
+    <div id="divMensaje" style="margin-top: 8px; display: none;"></div>
+  </section>
+
+  <section class="caja">
+    <h3>Reporte de Ventas</h3>
+    <p>Monto total de ventas: <strong id="lblMontoTotal">$0.00</strong></p>
+    <p>Bebidas con precio mayor a $4: <strong id="lblBebidasMayorCuatro">0</strong></p>
+    <p>Promedio de azúcar por bebida: <strong id="lblPromedioAzucar">0.00 g</strong></p>
+    <p>Total de bebidas procesadas: <strong id="lblTotalBebidas">0</strong></p>
+
+    <h4>Detalle de bebidas:</h4>
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Tipo</th>
+          <th>Precio Base</th>
+          <th>Precio Final</th>
+          <th>Azúcar (g)</th>
+        </tr>
+      </thead>
+      <tbody id="tblReporteCuerpo"></tbody>
+    </table>
+
+    <h4>Salida requerida:</h4>
+    <pre id="txtConsolaSalida"></pre>
+
+    <h4>Salida nuevo requerimiento (Azúcar):</h4>
+    <pre id="txtSalidaAzucar"></pre>
+  </section>
+
+  <script type="module" src="./dist/index.js"></script>
+</body>
+</html>

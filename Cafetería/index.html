@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cafetería de Especialidad</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    input, select, button {
+      padding: 5px;
+      margin: 3px 0;
+    }
+    .caja {
+      border: 1px solid #999;
+      padding: 15px;
+      margin-bottom: 20px;
+      max-width: 520px;
+    }
+    .subseccion {
+      margin-top: 10px;
+      border-top: 1px dashed #ccc;
+      padding-top: 8px;
+    }
+    table {
+      border-collapse: collapse;
+      margin-top: 10px;
+      width: 100%;
+      max-width: 520px;
+    }
+    th, td {
+      border: 1px solid #999;
+      padding: 5px 8px;
+      text-align: left;
+    }
+    pre {
+      background-color: #f4f4f4;
+      border: 1px solid #ccc;
+      padding: 10px;
+      max-width: 520px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Cafetería de Especialidad</h2>
+
+  <section class="caja">
+    <h3>Registrar Bebida</h3>
+
+    <div>
+      <label>Nombre:<br>
+        <input type="text" id="inNombre" placeholder="Ej: Latte, Frappé Mocha">
+      </label>
+    </div>
+
+    <div>
+      <label>Precio base ($):<br>
+        <input type="number" id="inPrecioBase" step="0.01" placeholder="0.00">
+      </label>
+    </div>
+
+    <div>
+      <label>Tipo de preparación:<br>
+        <select id="selTipo">
+          <option value="caliente">Café Caliente</option>
+          <option value="fria">Bebida Fría / Frappé</option>
+        </select>
+      </label>
+    </div>
+
+    <div id="secCaliente" class="subseccion">
+      <label>
+        <input type="checkbox" id="chkLecheVegetal"> Con leche vegetal (+$0.75)
+      </label>
+    </div>
+
+    <div id="secFria" class="subseccion" style="display: none;">
+      <label>
+        <input type="checkbox" id="chkGrande"> Tamaño grande (+20%)
+      </label>
+    </div>
+
+    <br>
+    <div>
+      <button type="button" id="btnProcesar">Procesar</button>
+      <button type="button" id="btnCargarCasos">Cargar Casos de Prueba</button>
+      <button type="button" id="btnLimpiar">Reiniciar</button>
+    </div>
+
+    <div id="divMensaje" style="margin-top: 8px; display: none;"></div>
+  </section>
+
+  <section class="caja">
+    <h3>Reporte de Ventas</h3>
+    <p>Monto total de ventas: <strong id="lblMontoTotal">$0.00</strong></p>
+    <p>Bebidas con precio mayor a $4: <strong id="lblBebidasMayorCuatro">0</strong></p>
+    <p>Promedio de azúcar por bebida: <strong id="lblPromedioAzucar">0.00 g</strong></p>
+    <p>Total de bebidas procesadas: <strong id="lblTotalBebidas">0</strong></p>
+
+    <h4>Detalle de bebidas:</h4>
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Tipo</th>
+          <th>Precio Base</th>
+          <th>Precio Final</th>
+          <th>Azúcar (g)</th>
+        </tr>
+      </thead>
+      <tbody id="tblReporteCuerpo"></tbody>
+    </table>
+
+    <h4>Salida requerida:</h4>
+    <pre id="txtConsolaSalida"></pre>
+
+    <h4>Salida nuevo requerimiento (Azúcar):</h4>
+    <pre id="txtSalidaAzucar"></pre>
+  </section>
+
+  <script type="module" src="./dist/index.js"></script>
+</body>
+</html>
