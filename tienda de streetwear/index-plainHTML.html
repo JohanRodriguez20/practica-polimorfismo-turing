@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Tienda de sneakers y ropa urbana.">
+    <title>Tienda Streetwear - HTML Plano</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        th, td { padding: .6rem; border: 1px solid #bbb; text-align: left; }
+        .number { text-align: right; }
+        #resumen { margin-top: 1rem; padding: 1rem; border: 1px solid #aaa; background: #f5f5f5; }
+        #prenda { max-width: 420px; margin-top: 1.5rem; padding: 1rem; border: 1px solid #aaa; }
+        label { display: block; margin: .7rem 0 .25rem; }
+        input:not([type="checkbox"]), select { box-sizing: border-box; width: 100%; padding: .45rem; }
+        button { margin: .8rem .25rem 0 0; padding: .5rem .9rem; cursor: pointer; }
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+    <section id="app-plain">
+        <h1>Tienda de Sneakers y Ropa Urbana (HTML Plano)</h1>
+        <button id="body_btNuevaPrenda" type="button">Nueva prenda</button>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Marca</th>
+                    <th>Costo</th>
+                    <th>Tipo de prenda</th>
+                    <th>Características</th>
+                    <th class="number">Precio final</th>
+                    <th class="number">Ganancia neta</th>
+                    <th class="number">Puntos Drop</th>
+                </tr>
+            </thead>
+            <tbody id="body_listaPrendas"></tbody>
+        </table>
+
+        <div id="resumen">
+            <strong>Resumen de la tienda</strong><br>
+            Ganancia total: <span id="body_lblGananciaTotal">$0.00</span><br>
+            Código con mayor ganancia: <span id="body_lblCodigoMayor">—</span><br>
+            Total de puntos Drop: <span id="body_lblTotalPuntosDrop">0 pts</span>
+        </div>
+    </section>
+
+    <section id="prenda" hidden>
+        <h2>Registrar prenda</h2>
+        <form id="prd_form">
+            <label for="prd_inCodigo">Código</label>
+            <input id="prd_inCodigo" type="text" maxlength="20" required>
+
+            <label for="prd_inMarca">Marca</label>
+            <input id="prd_inMarca" type="text" maxlength="60" required>
+
+            <label for="prd_inCosto">Costo ($)</label>
+            <input id="prd_inCosto" type="number" min="0.01" step="0.01" required>
+
+            <label for="prd_selTipo">Tipo de prenda</label>
+            <select id="prd_selTipo">
+                <option value="sneaker">Sneaker</option>
+                <option value="hoodie">Hoodie</option>
+            </select>
+
+            <div id="prd_rowSneaker">
+                <label>
+                    <input id="prd_chkAltaDemanda" type="checkbox">
+                    Alta demanda (+10%)
+                </label>
+            </div>
+            <div id="prd_rowHoodie" hidden>
+                <label>
+                    <input id="prd_chkEstampado" type="checkbox">
+                    Estampado (+$8)
+                </label>
+                <label>
+                    <input id="prd_chkColeccionPasada" type="checkbox">
+                    Colección pasada (-$6)
+                </label>
+            </div>
+
+            <button id="prd_btCancelar" type="button">Cancelar</button>
+            <button type="submit">Registrar</button>
+        </form>
+    </section>
+
+    <script type="module">
+        import cStore from "./dist/controllers/cStore.js";
+        import cPrenda from "./dist/controllers/cPrenda.js";
+        import vStorePlain from "./dist/views/vStorePlain.js";
+        import vPrendaPlain from "./dist/views/vPrendaPlain.js";
+
+        const vistaStore = new vStorePlain();
+        const vistaPrenda = new vPrendaPlain();
+        const controladorPrenda = new cPrenda(vistaPrenda);
+        new cStore(vistaStore, controladorPrenda);
+    </script>
+</body>
+</html>
